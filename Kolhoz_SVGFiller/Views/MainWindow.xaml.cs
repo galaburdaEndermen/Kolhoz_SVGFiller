@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Kolhoz_SVGFiller.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,7 @@ namespace Kolhoz_SVGFiller
         public MainWindow()
         {
             InitializeComponent();
+            this.DataContext = new MainViewModels();
         }
     }
 }

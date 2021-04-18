@@ -12,7 +12,7 @@
             <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
-        <Image></Image>
+        <Image Grid.Column="0" Source="{Binding Image}"></Image>
         
         <ListView Grid.Column="1" BorderBrush="Transparent"></ListView>
         
