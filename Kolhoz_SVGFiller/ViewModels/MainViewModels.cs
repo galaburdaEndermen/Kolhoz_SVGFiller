@@ -1,7 +1,10 @@
-﻿using Microsoft.Win32;
+﻿using Kolhoz_SVGFiller.Models;
+using Microsoft.Win32;
 using Svg;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -15,20 +18,51 @@ using System.Windows.Media.Imaging;
 
 namespace Kolhoz_SVGFiller.ViewModels
 {
-    public class MainViewModels
+    public class MainViewModels : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void RaisePropertyChanged(string propertyName)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null)
+            {
+                handler(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
         private string source = "";
+        private string generated = "";
         private void InitializeSource()
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
             if (openFileDialog.ShowDialog() == true)
             {
                 source = openFileDialog.FileName;
-                //'(<text.*<\/text>)'
-                var sas = Regex.Matches(File.ReadAllText(source), @"(<text.*<\/text>)");
+                var matches = Regex.Matches(File.ReadAllText(source), @"(<text.*<\/text>)");
+                foreach (var match in matches)
+                {
+                    var sas = Regex.Match(match.ToString(), @"(?<=>)([\w\s]+)(?=<\/)");
+                    variables.Add(new Field() { Name = sas.ToString(), Value = "" });
+                }
+                RaisePropertyChanged(nameof(Variables));
                 
             }
                 
+        }
+
+        private List<Field> variables = new List<Field>();
+        public ObservableCollection<Field> Variables 
+        {
+            get
+            {
+                return new ObservableCollection<Field>(variables);
+            }
+            set
+            {
+                variables = new List<Field>(value);
+                RaisePropertyChanged(nameof(Variables));
+
+            }
         }
 
         public MainViewModels()
@@ -40,23 +74,43 @@ namespace Kolhoz_SVGFiller.ViewModels
         { 
             get 
             {
-                if (string.IsNullOrWhiteSpace(source))
+                if (string.IsNullOrWhiteSpace(generated))
                 {
-                    InitializeSource();
-                }
-                using (MemoryStream memory = new MemoryStream())
-                {
-                    var svgDoc = SvgDocument.Open(source);
-                    Bitmap bmp = svgDoc.Draw();
+                    if (string.IsNullOrWhiteSpace(source))
+                    {
+                        InitializeSource();
+                    }
+                    using (MemoryStream memory = new MemoryStream())
+                    {
+                        var svgDoc = SvgDocument.Open(source);
+                        Bitmap bmp = svgDoc.Draw();
 
-                    bmp.Save(memory, ImageFormat.Png);
-                    memory.Position = 0;
-                    BitmapImage bitmapImage = new BitmapImage();
-                    bitmapImage.BeginInit();
-                    bitmapImage.StreamSource = memory;
-                    bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmapImage.EndInit();
-                    return bitmapImage;
+                        bmp.Save(memory, ImageFormat.Png);
+                        memory.Position = 0;
+                        BitmapImage bitmapImage = new BitmapImage();
+                        bitmapImage.BeginInit();
+                        bitmapImage.StreamSource = memory;
+                        bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmapImage.EndInit();
+                        return bitmapImage;
+                    }
+                }
+                else
+                {
+                    using (MemoryStream memory = new MemoryStream())
+                    {
+                        var svgDoc = SvgDocument.Open(generated);
+                        Bitmap bmp = svgDoc.Draw();
+
+                        bmp.Save(memory, ImageFormat.Png);
+                        memory.Position = 0;
+                        BitmapImage bitmapImage = new BitmapImage();
+                        bitmapImage.BeginInit();
+                        bitmapImage.StreamSource = memory;
+                        bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmapImage.EndInit();
+                        return bitmapImage;
+                    }
                 }
             }
         }
