@@ -26,5 +26,6 @@ namespace Kolhoz_SVGFiller
             InitializeComponent();
             this.DataContext = new MainViewModels();
         }
+
     }
 }

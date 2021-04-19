@@ -35,39 +35,83 @@ namespace Kolhoz_SVGFiller.ViewModels
         private void InitializeSource()
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Svg files(*.svg)| *.svg";
             if (openFileDialog.ShowDialog() == true)
             {
                 source = openFileDialog.FileName;
                 var matches = Regex.Matches(File.ReadAllText(source), @"(<text.*<\/text>)");
                 foreach (var match in matches)
                 {
-                    var sas = Regex.Match(match.ToString(), @"(?<=>)([\w\s]+)(?=<\/)");
-                    variables.Add(new Field() { Name = sas.ToString(), Value = "" });
+                    var sas = Regex.Matches(match.ToString(), @"(?<=>)([\w\s]+)(?=<\/)");
+                    foreach (var item in sas)
+                    {
+                        var field = new Field() { Name = item.ToString(), Value = item.ToString() };
+                        field.PropertyChanged += Field_PropertyChanged;
+                        Variables.Add(field);
+                    }
+                   
                 }
                 RaisePropertyChanged(nameof(Variables));
                 
             }
+            else
+            {
+                Application.Current.Shutdown();
+            }
                 
         }
 
-        private List<Field> variables = new List<Field>();
-        public ObservableCollection<Field> Variables 
+        private void Field_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            get
-            {
-                return new ObservableCollection<Field>(variables);
-            }
-            set
-            {
-                variables = new List<Field>(value);
-                RaisePropertyChanged(nameof(Variables));
 
+            generated = File.ReadAllText(source);
+            foreach (var variable in Variables)
+            {
+                generated = generated.Replace(variable.Name, variable.Value);
             }
+            RaisePropertyChanged(nameof(Image));
         }
+
+        public ObservableCollection<Field> Variables
+        {
+            get;
+            set;
+        } = new ObservableCollection<Field>();
 
         public MainViewModels()
         {
             InitializeSource();
+            render = new Command(renderPNG);
+        }
+
+        private Command render;
+        public Command Render { get { return render; } }
+        void renderPNG(object o)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Png files(*.png)| *.png";
+            saveFileDialog.DefaultExt = "png";
+            saveFileDialog.FileName = Path.GetFileNameWithoutExtension(source) + ".png";
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                var fileName = saveFileDialog.FileName;
+
+
+                using (FileStream file = new FileStream(path: fileName, mode: FileMode.OpenOrCreate))
+                {
+                    var svgDoc = SvgDocument.FromSvg<SvgDocument>(generated);
+                    Bitmap bmp = svgDoc.Draw();
+
+                    bmp.Save(file, ImageFormat.Png);
+                    file.Position = 0;
+                    BitmapImage bitmapImage = new BitmapImage();
+                    bitmapImage.BeginInit();
+                    bitmapImage.StreamSource = file;
+                    bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmapImage.EndInit();
+
+                }
+            }
         }
 
         public object Image 
@@ -99,7 +143,7 @@ namespace Kolhoz_SVGFiller.ViewModels
                 {
                     using (MemoryStream memory = new MemoryStream())
                     {
-                        var svgDoc = SvgDocument.Open(generated);
+                        var svgDoc = SvgDocument.FromSvg<SvgDocument>(generated);
                         Bitmap bmp = svgDoc.Draw();
 
                         bmp.Save(memory, ImageFormat.Png);

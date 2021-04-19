@@ -11,14 +11,17 @@
             <ColumnDefinition Width="7*"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="50"></RowDefinition>
+        </Grid.RowDefinitions>
 
-        <Image Grid.Column="0" Source="{Binding Image}"></Image>
+        <Image Grid.Column="0" Source="{Binding Image}" Grid.RowSpan="2"></Image>
 
         <ListBox  Grid.Column="1" BorderBrush="Transparent" ItemsSource="{Binding Variables}">
             <!--стіль, шоб не виділялось при наведенні-->
             <ListBox.ItemContainerStyle>
                 <Style  TargetType="{x:Type ListBoxItem}">
-                    <!--<Setter Property="Background" Value="{StaticResource LightBrsh}"/>-->
                     <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
                     <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
                     <Setter Property="Padding" Value="2,0,0,0"/>
@@ -41,11 +44,6 @@
                                     <Trigger Property="IsEnabled" Value="false">
                                         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
                                     </Trigger>
-                                    <!--<Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource ExtraLightBrsh}"/>
-                                    </Trigger>-->
-
-                                    <!--Some default triggers removed to avoid background changes on selection-->
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Setter.Value>
@@ -68,12 +66,14 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Text="{Binding Name}" Grid.Row="0"></TextBlock>
-                        <TextBox Text="{Binding Value}" Grid.Row="1"></TextBox>
+                        <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1"></TextBox>
 
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
+
+        <Button Grid.Column="1" Grid.Row="1" Content="Зберегти" Command="{Binding Render}"></Button>
         
     </Grid>
 </Window>
