@@ -4,6 +4,8 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net5.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <AssemblyName>SvgGenerator</AssemblyName>
+    <ApplicationIcon>24 (1).ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
